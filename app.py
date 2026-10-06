@@ -9,7 +9,7 @@
   POST /upload                      模拟上传一个 .jsonl 文件
   POST /api/rerun/{line_no}         发起重跑（1 秒后模拟完成）
 
-运行方式见 pyweb/README.md（或项目根 README）。
+运行方式见项目根目录 README.md。
 """
 import json
 import random
