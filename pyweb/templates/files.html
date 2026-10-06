@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="mx-auto flex h-[calc(100vh-5rem)] w-full max-w-[70rem] flex-col gap-4 2xl:max-w-[85rem] 3xl:max-w-[100rem] 4xl:max-w-[120rem]">
+  <!-- 标题行 -->
+  <div class="flex shrink-0 items-end justify-between">
+    <div>
+      <h1 class="text-lg font-semibold text-slate-800">评测文件</h1>
+      <p class="mt-0.5 text-xs text-slate-500">上传 .jsonl 评测结果文件，解析后查看记录明细</p>
+    </div>
+    <span class="text-xs text-slate-400">共 {{ files|length }} 个文件</span>
+  </div>
+
+  <!-- 拖拽上传区（仅 UI：点击 / 拖入均模拟选中一个文件） -->
+  <form id="upload-zone" method="post" action="/upload"
+        class="flex shrink-0 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed border-slate-300 bg-white py-7 transition-colors hover:border-primary-300 hover:bg-primary-50/30">
+    <svg viewBox="0 0 24 24" class="h-6 w-6 text-primary-500" fill="none" aria-hidden="true">
+      <path d="M12 16V5m0 0-4 4m4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <button type="submit" data-upload-text class="text-sm font-medium text-slate-600">拖拽 .jsonl 文件到此处，或点击模拟选中文件</button>
+    <p class="text-xs text-slate-400">支持 .jsonl 格式 · 单文件 ≤ 50MB（演示环境为模拟上传）</p>
+  </form>
+
+  <!-- 文件列表 -->
+  <section class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-card">
+    <header class="flex h-10 shrink-0 items-center justify-between border-b border-slate-200 px-4">
+      <h2 class="text-sm font-semibold text-slate-700">文件列表</h2>
+      <span class="text-xs text-slate-400">点击文件进入记录列表</span>
+    </header>
+    <div class="min-h-0 flex-1 overflow-auto">
+      <table class="w-full text-left">
+        <thead class="sticky top-0 z-10">
+          <tr class="bg-slate-50/95 text-xs text-slate-500 backdrop-blur">
+            <th class="px-4 py-2 font-medium">文件名</th>
+            <th class="w-24 px-4 py-2 font-medium">记录数</th>
+            <th class="w-24 px-4 py-2 font-medium">大小</th>
+            <th class="w-40 px-4 py-2 font-medium">上传时间</th>
+            <th class="w-32 px-4 py-2 text-right font-medium">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in files %}
+          <tr onclick="location.href='/records?file={{ f.id }}'"
+              class="cursor-pointer border-b border-slate-100 text-sm transition-colors last:border-0 even:bg-slate-50/40 hover:bg-primary-50/50 {{ 'bg-primary-50/60' if f.id == new_id else '' }}">
+            <td class="px-4 py-2.5">
+              <div class="flex items-center gap-2">
+                <svg viewBox="0 0 16 16" class="h-4 w-4 shrink-0 text-primary-500" fill="none" aria-hidden="true">
+                  <path d="M4 1.5h5.5L13 5v9.5H4z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+                  <path d="M9.5 1.5V5H13" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+                </svg>
+                <span class="font-mono text-slate-800">{{ f.name }}</span>
+                {% if f.id == new_id %}
+                <span class="rounded bg-primary-100 px-1.5 py-px text-xs font-medium text-primary-700">新</span>
+                {% endif %}
+              </div>
+            </td>
+            <td class="px-4 py-2.5 font-mono text-slate-700">{{ f.recordCount }}</td>
+            <td class="px-4 py-2.5 text-slate-500">{{ f.size }}</td>
+            <td class="px-4 py-2.5 font-mono text-slate-500">{{ f.uploadedAt }}</td>
+            <td class="px-4 py-2.5 text-right">
+              <span class="text-primary-600 hover:underline">查看记录 →</span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}

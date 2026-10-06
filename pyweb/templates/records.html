@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import score_badge, passed_badge %}
+{% block content %}
+<div class="mx-auto flex h-[calc(100vh-5rem)] w-full max-w-[80rem] flex-col gap-3 2xl:max-w-[95rem] 3xl:max-w-[110rem] 4xl:max-w-[130rem]">
+  <!-- 顶部：返回 + 当前文件信息 -->
+  <div class="flex shrink-0 flex-wrap items-center gap-3">
+    <a href="/" class="inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-xs text-slate-600 transition-colors hover:bg-slate-50">← 文件列表</a>
+    <h1 class="text-lg font-semibold text-slate-800">记录列表</h1>
+    <span class="max-w-[280px] truncate rounded border border-slate-200 bg-white px-2 py-0.5 font-mono text-xs text-slate-600" title="{{ current_file.name }}">{{ current_file.name }}</span>
+    <span class="ml-auto text-xs text-slate-500">
+      共 <span class="font-medium text-slate-700">{{ all_count }}</span> 条记录 · 通过
+      <span class="font-medium text-green-600">{{ passed_count }}</span> · 不通过
+      <span class="font-medium text-red-600">{{ failed_count }}</span> · 人工参与
+      <span class="font-medium text-sky-600">{{ manual_count }}</span>
+    </span>
+  </div>
+
+  <!-- 工具栏：搜索（表单提交）/ 筛选（链接）/ 排序（下拉自动提交） -->
+  <div class="flex shrink-0 flex-wrap items-center gap-2">
+    <form method="get" action="/records" class="relative">
+      <input type="hidden" name="filter" value="{{ filter }}">
+      <input type="hidden" name="sort" value="{{ sort }}">
+      <input type="text" name="q" value="{{ q }}" placeholder="搜索 Query 关键词…"
+             class="h-8 w-64 rounded border border-slate-200 bg-white pl-8 pr-7 text-xs text-slate-700 placeholder:text-slate-400 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100">
+      <svg viewBox="0 0 16 16" class="pointer-events-none absolute left-2.5 top-2 h-4 w-4 text-slate-400" fill="none" aria-hidden="true">
+        <circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.3"/>
+        <path d="m10.5 10.5 3 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+      </svg>
+      <button type="submit" class="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-600" aria-label="搜索">🔍</button>
+    </form>
+
+    <!-- 筛选：全部 / 通过 / 不通过 / 人工参与 -->
+    <div class="flex items-center rounded border border-slate-200 bg-white p-0.5">
+      {% for key, label, count in [('all', '全部', all_count), ('passed', '通过', passed_count), ('failed', '不通过', failed_count), ('manual', '人工参与', manual_count)] %}
+      <a href="{{ records_url(q=q, filter=key, sort=sort, page=1) }}"
+         class="flex h-7 items-center gap-1 rounded px-2.5 text-xs transition-colors {{ 'bg-primary-600 font-medium text-white' if filter == key else 'text-slate-600 hover:bg-slate-100' }}">
+        {{ label }}
+        <span class="font-mono {{ 'text-primary-100' if filter == key else 'text-slate-400' }}">{{ count }}</span>
+      </a>
+      {% endfor %}
+    </div>
+
+    <!-- 排序 -->
+    <form method="get" action="/records" onchange="this.requestSubmit ? this.requestSubmit() : this.submit()">
+      <input type="hidden" name="q" value="{{ q }}">
+      <input type="hidden" name="filter" value="{{ filter }}">
+      <select name="sort" class="h-8 rounded border border-slate-200 bg-white px-2 text-xs text-slate-600 focus:border-primary-400 focus:outline-none">
+        <option value="default" {{ 'selected' if sort == 'default' }}>默认顺序（行号）</option>
+        <option value="score-desc" {{ 'selected' if sort == 'score-desc' }}>分数 降序</option>
+        <option value="score-asc" {{ 'selected' if sort == 'score-asc' }}>分数 升序</option>
+        <option value="duration-desc" {{ 'selected' if sort == 'duration-desc' }}>耗时 降序</option>
+        <option value="duration-asc" {{ 'selected' if sort == 'duration-asc' }}>耗时 升序</option>
+      </select>
+    </form>
+
+    <span class="ml-auto text-xs text-slate-400">
+      {% if q.strip() or filter != 'all' or sort != 'default' %}筛选后 {{ total }} 条{% endif %}
+    </span>
+  </div>
+
+  <!-- 记录表格 -->
+  <section class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-card">
+    <div class="min-h-0 flex-1 overflow-auto">
+      <table class="w-full table-fixed text-left">
+        <thead class="sticky top-0 z-10">
+          <tr class="bg-slate-50/95 text-xs text-slate-500 backdrop-blur">
+            <th class="w-12 px-3 py-2 font-medium">#</th>
+            <th class="px-3 py-2 font-medium">Query</th>
+            <th class="w-16 px-3 py-2 font-medium">步骤数</th>
+            <th class="w-16 px-3 py-2 font-medium">Score</th>
+            <th class="w-24 px-3 py-2 font-medium">Passed</th>
+            <th class="w-20 px-3 py-2 font-medium">耗时</th>
+            <th class="w-24 px-3 py-2 text-right font-medium">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+          <tr onclick="location.href='/records/{{ r.line_no }}'"
+              class="cursor-pointer border-b border-slate-100 text-sm transition-colors last:border-0 even:bg-slate-50/40 hover:bg-primary-50/50">
+            <td class="px-3 py-2.5 font-mono text-slate-500">{{ r.line_no }}</td>
+            <td class="max-w-0 truncate px-3 py-2.5 text-slate-800" title="{{ r.query }}">{{ r.query }}</td>
+            <td class="px-3 py-2.5">
+              <span class="font-mono {{ 'font-semibold text-red-600' if r.has_failed else 'text-slate-600' }}">
+                {{ r.steps_count }}{% if r.has_failed %} <span title="存在失败步骤">⚠</span>{% endif %}
+              </span>
+            </td>
+            <td class="px-3 py-2.5">{{ score_badge(r.score) }}</td>
+            <td class="px-3 py-2.5">{{ passed_badge(r.passed) }}</td>
+            <td class="px-3 py-2.5 font-mono text-slate-600">{{ format_sec(r.duration) }}</td>
+            <td class="px-3 py-2.5 text-right">
+              <span class="text-primary-600 hover:underline">详情 →</span>
+            </td>
+          </tr>
+          {% endfor %}
+          {% if not rows %}
+          <tr>
+            <td colspan="7" class="px-4 py-12 text-center text-sm text-slate-400">无匹配记录，试试调整搜索关键词或筛选条件</td>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+    {% if total > 0 %}
+    <footer class="shrink-0 border-t border-slate-200 px-4 py-2">
+      <div class="flex items-center justify-between gap-3">
+        <span class="text-xs text-slate-500">共 <span class="font-medium text-slate-700">{{ total }}</span> 条 · 第 {{ page_from }}–{{ page_to }} 条</span>
+        <div class="flex items-center gap-1">
+          {% if page > 1 %}
+          <a href="{{ records_url(q=q, filter=filter, sort=sort, page=page-1) }}" aria-label="上一页"
+             class="inline-flex h-7 min-w-7 items-center justify-center rounded border border-slate-200 px-1.5 text-xs text-slate-600 transition-colors hover:bg-slate-50">‹</a>
+          {% else %}
+          <span aria-hidden="true" class="inline-flex h-7 min-w-7 cursor-not-allowed items-center justify-center rounded border border-slate-200 px-1.5 text-xs text-slate-600 opacity-40">‹</span>
+          {% endif %}
+          {% for item in pages %}
+          {% if item == '…' %}
+          <span class="px-1 text-xs text-slate-400">…</span>
+          {% elif item == page %}
+          <span class="inline-flex h-7 min-w-7 items-center justify-center rounded border border-primary-600 bg-primary-600 px-1.5 text-xs text-white">{{ item }}</span>
+          {% else %}
+          <a href="{{ records_url(q=q, filter=filter, sort=sort, page=item) }}"
+             class="inline-flex h-7 min-w-7 items-center justify-center rounded border border-slate-200 px-1.5 text-xs text-slate-600 transition-colors hover:bg-slate-50">{{ item }}</a>
+          {% endif %}
+          {% endfor %}
+          {% if page < total_pages %}
+          <a href="{{ records_url(q=q, filter=filter, sort=sort, page=page+1) }}" aria-label="下一页"
+             class="inline-flex h-7 min-w-7 items-center justify-center rounded border border-slate-200 px-1.5 text-xs text-slate-600 transition-colors hover:bg-slate-50">›</a>
+          {% else %}
+          <span aria-hidden="true" class="inline-flex h-7 min-w-7 cursor-not-allowed items-center justify-center rounded border border-slate-200 px-1.5 text-xs text-slate-600 opacity-40">›</span>
+          {% endif %}
+        </div>
+      </div>
+    </footer>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}评测结果查看器{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // 与 React 版 tailwind.config.js 对齐：primary 蓝色系 / 3xl 4xl 宽屏断点 / shadow-card
+    tailwind.config = {
+      theme: {
+        extend: {
+          screens: { '3xl': '1920px', '4xl': '2560px' },
+          colors: {
+            primary: {
+              50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd',
+              400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8',
+              800: '#1e40af', 900: '#1e3a8a', 950: '#172554',
+            },
+          },
+          boxShadow: { card: '0 1px 2px rgb(15 23 42 / 0.06)' },
+        },
+      },
+    }
+  </script>
+  <style>
+    /* details/summary 原生折叠的通用样式（JSON 树 / 任务路径 / row_data 折叠等） */
+    details > summary { list-style: none; }
+    details > summary::-webkit-details-marker { display: none; }
+    details .caret { transition: transform 0.15s; }
+    details[open] > summary .caret { transform: rotate(90deg); }
+    /* 折叠态 / 展开态的内容互换（替代 React 的条件渲染） */
+    details > summary .when-open { display: inline; }
+    details > summary .when-closed { display: none; }
+    details:not([open]) > summary .when-open { display: none; }
+    details:not([open]) > summary .when-closed { display: inline; }
+  </style>
+</head>
+<body class="flex min-h-screen flex-col">
+  <!-- 顶栏：与 React 版 AppShell 一致（h-12 sticky） -->
+  <header class="sticky top-0 z-40 h-12 shrink-0 border-b border-slate-200 bg-white">
+    <div class="flex h-full items-center gap-3 px-4 sm:px-6 3xl:px-8">
+      <a href="/" class="flex items-center gap-2">
+        <span class="flex h-6 w-6 items-center justify-center rounded bg-primary-600 text-xs font-bold text-white">评</span>
+        <span class="text-sm font-semibold text-slate-800">评测结果查看器</span>
+      </a>
+      <span class="hidden text-xs text-slate-400 sm:inline">LLM / Agent Evaluation Viewer</span>
+      <span class="ml-auto rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs text-slate-500">mock 数据 · v0.1 · Python</span>
+    </div>
+  </header>
+  <main class="flex-1 px-4 py-4 sm:px-6 3xl:px-8">
+    {% block content %}{% endblock %}
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>

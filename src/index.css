@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* 内部工具风格：14px 基准字号，提高信息密度 */
+  html {
+    font-size: 14px;
+  }
+
+  body {
+    @apply bg-slate-100 text-slate-800 antialiased;
+    font-family:
+      Inter,
+      -apple-system,
+      'PingFang SC',
+      'Microsoft YaHei',
+      'Segoe UI',
+      system-ui,
+      sans-serif;
+  }
+}

@@ -1,0 +1,222 @@
+{# ---------------------------------------------------------------- 徽章类 #}
+
+{# 维度值徽章：1 绿 ✓ / 0 红 ✕ / 文字状态蓝；invert = 反向维度（icon_issue：1=有问题红✕，0=无问题绿✓） #}
+{% macro dimension_badge(value, invert=False) -%}
+  {%- if value is number and value is not boolean -%}
+    {%- set ok = (value == 0) if invert else (value == 1) -%}
+    {%- if ok -%}
+      <span class="inline-flex items-center gap-1 whitespace-nowrap rounded border border-green-200 bg-green-50 px-2 py-0.5 font-mono text-xs font-semibold text-green-700">✓ {{ value }}</span>
+    {%- else -%}
+      <span class="inline-flex items-center gap-1 whitespace-nowrap rounded border border-red-200 bg-red-50 px-2 py-0.5 font-mono text-xs font-semibold text-red-700">✕ {{ value }}</span>
+    {%- endif -%}
+  {%- else -%}
+    <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded border border-sky-200 bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-700"><span class="h-1.5 w-1.5 rounded-full bg-sky-500"></span>{{ value }}</span>
+  {%- endif -%}
+{%- endmacro %}
+
+{# Passed 徽章：通过 绿 / 不通过 红 / None = 人工参与（蓝） #}
+{% macro passed_badge(passed) -%}
+  {%- if passed is none -%}
+    <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded border border-sky-200 bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-700"><span class="h-1.5 w-1.5 rounded-full bg-sky-500"></span>人工参与</span>
+  {%- elif passed -%}
+    <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded border border-green-200 bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700"><span class="h-1.5 w-1.5 rounded-full bg-green-500"></span>通过</span>
+  {%- else -%}
+    <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded border border-red-200 bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700"><span class="h-1.5 w-1.5 rounded-full bg-red-500"></span>不通过</span>
+  {%- endif -%}
+{%- endmacro %}
+
+{# 综合分徽章：None = 人工参与（蓝）· >=0.8 绿 · >=0.6 琥珀 · <0.6 红 #}
+{% macro score_badge(score) -%}
+  {%- if score is none -%}
+    <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded border border-sky-200 bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-700"><span class="h-1.5 w-1.5 rounded-full bg-sky-500"></span>人工参与</span>
+  {%- else -%}
+    {%- set tone = 'border-green-200 bg-green-50 text-green-700' if score >= 0.8 else ('border-amber-200 bg-amber-50 text-amber-700' if score >= 0.6 else 'border-red-200 bg-red-50 text-red-700') -%}
+    <span class="inline-flex items-center rounded border px-2 py-0.5 font-mono text-xs font-semibold {{ tone }}">{{ format_score(score) }}</span>
+  {%- endif -%}
+{%- endmacro %}
+
+{# 状态徽章：success 绿 / failed 红 / running 橙（脉冲圆点） #}
+{% macro status_badge(status, size='xs') -%}
+  {%- if status == 'success' -%}{% set dot = 'bg-green-500' %}{% set badge = 'border-green-200 bg-green-50 text-green-700' %}{% set label = '成功' %}
+  {%- elif status == 'failed' -%}{% set dot = 'bg-red-500' %}{% set badge = 'border-red-200 bg-red-50 text-red-700' %}{% set label = '失败' %}
+  {%- elif status == 'running' -%}{% set dot = 'bg-orange-500 animate-pulse' %}{% set badge = 'border-orange-200 bg-orange-50 text-orange-700' %}{% set label = '运行中' %}
+  {%- else -%}{% set dot = 'bg-slate-400' %}{% set badge = 'border-slate-200 bg-slate-50 text-slate-600' %}{% set label = status %}
+  {%- endif -%}
+  <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded border font-medium {{ badge }} {{ 'px-1.5 py-px text-xs' if size == 'xs' else 'px-2 py-0.5 text-xs' }}"><span class="h-1.5 w-1.5 rounded-full {{ dot }}"></span>{{ label }}</span>
+{%- endmacro %}
+
+{# ---------------------------------------------------------------- 布局类 #}
+
+{# 通用卡片：标题栏 + 内容区（{% call card('标题', 'extra') %}…{% endcall %}） #}
+{% macro card(title, extra=None, className='') -%}
+<section class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-card {{ className }}">
+  <header class="flex h-9 shrink-0 items-center justify-between border-b border-slate-200 px-4">
+    <h2 class="text-sm font-semibold text-slate-700">{{ title }}</h2>
+    {%- if extra %}<span class="text-xs text-slate-400">{{ extra }}</span>{% endif -%}
+  </header>
+  <div class="p-4">{{ caller() }}</div>
+</section>
+{%- endmacro %}
+
+{# 评测信息行：label 居左、值居右 #}
+{% macro info_row(label, value) -%}
+<div class="flex items-center justify-between rounded border border-slate-100 bg-slate-50/60 px-2.5 py-1.5">
+  <span class="text-xs text-slate-500">{{ label }}</span>
+  <span class="font-mono text-sm text-slate-700">{{ value }}</span>
+</div>
+{%- endmacro %}
+
+{# 长文本：超过阈值默认截断，点击展示全部（模型回复 / 参考答案可达 2000~5000 字） #}
+{% macro long_text(text, clamp='line-clamp-5', threshold=160, size='text-sm', action='展示全部', wrap_class='mt-1') -%}
+{%- set long = text|length > threshold -%}
+<div class="{{ wrap_class }}">
+  <p class="{{ size }} leading-relaxed text-slate-700{{ (' ' ~ clamp) if long else '' }}" data-clamp="{{ clamp }}">{{ text }}</p>
+  {%- if long %}
+  <button type="button" class="mt-1 text-xs font-medium text-primary-600 hover:underline" data-action="toggle-long"
+          data-closed-text="{{ action }}（{{ text|length }} 字）▾" data-open-text="收起 ▴">{{ action }}（{{ text|length }} 字）▾</button>
+  {%- endif %}
+</div>
+{%- endmacro %}
+
+{# ---------------------------------------------------------------- JSON 树视图（原生 details 折叠） #}
+
+{% macro value_text(value) -%}
+  {%- if value is none -%}
+    <span class="italic text-slate-400">null</span>
+  {%- elif value is boolean -%}
+    <span class="text-violet-600">{{ 'true' if value else 'false' }}</span>
+  {%- elif value is string -%}
+    <span class="break-all text-emerald-600">"{{ value }}"</span>
+  {%- elif value is number -%}
+    <span class="text-blue-600">{{ value }}</span>
+  {%- else -%}
+    <span class="text-slate-600">{{ value }}</span>
+  {%- endif -%}
+{%- endmacro %}
+
+{# JSON 树节点：对象 / 数组可点击 key 行收起展开，折叠时显示概要（{…} n 个键 / […] n 项） #}
+{% macro json_node(value, label=None) -%}
+  {%- if value is none or value is boolean or value is string or value is number -%}
+    <div class="whitespace-pre-wrap px-0.5 font-mono text-xs leading-relaxed">
+      {%- if label is not none %}<span class="text-slate-500">{{ label }}: </span>{% endif -%}
+      {{ value_text(value) }}
+    </div>
+  {%- else -%}
+    {%- set is_array = value is not mapping -%}
+    {%- set open_sym = '[' if is_array else '{' -%}
+    {%- set close_sym = ']' if is_array else '}' -%}
+    {%- set unit = '项' if is_array else '个键' -%}
+    {%- set count = value|length -%}
+    <div class="font-mono text-xs leading-relaxed">
+      <details open>
+        <summary class="flex w-full cursor-pointer list-none items-center gap-1 rounded px-0.5 text-left transition-colors hover:bg-slate-100">
+          <span class="caret inline-block w-3 shrink-0 text-slate-400">▸</span>
+          {%- if label is not none %}<span class="text-slate-500">{{ label }}:</span>{% endif -%}
+          <span class="when-open text-slate-400">{{ open_sym }}</span>
+          <span class="when-closed text-slate-400">{{ open_sym }}…{{ close_sym }} {{ count }} {{ unit }}</span>
+          <span class="when-closed text-slate-300">{{ close_sym }}</span>
+        </summary>
+        <div class="ml-[7px] border-l border-slate-200 pl-3">
+          {%- if is_array -%}
+            {%- for v in value %}{{ json_node(v, loop.index0|string) }}{% endfor -%}
+          {%- else -%}
+            {%- for k, v in value.items() %}{{ json_node(v, k) }}{% endfor -%}
+          {%- endif -%}
+        </div>
+        <div class="pl-4 text-slate-400">{{ close_sym }}</div>
+      </details>
+    </div>
+  {%- endif -%}
+{%- endmacro %}
+
+{# ---------------------------------------------------------------- 原子事实评测矩阵（业务 B 核心） #}
+
+{% macro fact_matrix(fd, history, result, available) -%}
+{%- set fact_keys = fd.keys()|list -%}
+{%- if not fact_keys or not available -%}
+  <p class="py-4 text-center text-xs text-slate-400">无原子事实或参考答案数据</p>
+{%- else -%}
+<div class="overflow-x-auto">
+  <table class="w-full min-w-max border-separate border-spacing-1 text-xs">
+    <thead>
+      <tr>
+        <th class="sticky left-0 z-10 min-w-[260px] bg-white pr-3 text-left font-medium text-slate-400">原子事实</th>
+        {%- for a in available -%}
+        <th class="min-w-[2rem] rounded bg-slate-50 px-1 py-1 text-center font-mono font-medium text-slate-500" title="{{ a.content[:80] }}">#{{ loop.index0 }}</th>
+        {%- endfor -%}
+        <th class="sticky right-0 z-10 min-w-[110px] bg-white pl-3 text-left font-medium text-slate-400">汇总</th>
+      </tr>
+    </thead>
+    <tbody>
+      {%- for k in fact_keys -%}
+      {%- set res = result.get(k) -%}
+      {%- set has_wrong = res and res['错误']|length > 0 -%}
+      {%- set unverified = (not res) or res['未验证'] -%}
+      <tr>
+        <td class="sticky left-0 z-10 max-w-[380px] truncate bg-white py-1.5 pr-3 text-slate-700" title="{{ fd[k]['原子事实'] }}">
+          <span class="mr-1.5 font-mono text-slate-400">{{ k }}</span>{{ fd[k]['原子事实'] }}
+        </td>
+        {%- for a in available -%}
+        {%- set verdict = verdict_at(history, loop.index0, k) -%}
+        <td class="min-w-[2rem] rounded py-1.5 text-center font-mono font-semibold {{ VERDICT_STYLE.get(verdict, 'bg-slate-100 text-slate-400') }}">{{ '✓' if verdict == '正确' else ('✕' if verdict == '错误' else '—') }}</td>
+        {%- endfor -%}
+        <td class="sticky right-0 z-10 bg-white py-1.5 pl-3">
+          {%- if not res -%}
+            <span class="text-slate-400">—</span>
+          {%- elif has_wrong -%}
+            <span class="whitespace-nowrap rounded border border-red-200 bg-red-50 px-1.5 py-px font-mono text-xs font-medium text-red-600">✕ 错误 [{{ res['错误']|join(',') }}]</span>
+          {%- elif unverified -%}
+            <span class="whitespace-nowrap rounded border border-sky-200 bg-sky-50 px-1.5 py-px text-xs font-medium text-sky-600">未验证</span>
+          {%- else -%}
+            <span class="whitespace-nowrap rounded border border-green-200 bg-green-50 px-1.5 py-px font-mono text-xs font-medium text-green-700">✓ 正确 [{{ res['正确']|join(',') }}]</span>
+          {%- endif -%}
+        </td>
+      </tr>
+      {%- endfor -%}
+    </tbody>
+  </table>
+  <p class="mt-2 text-xs text-slate-400">图例：✓ 正确 · ✕ 错误 · — 未验证；列号 #n 对应「参考答案」卡中的编号；按列看 = 某参考答案的判定质量，按行看 = 某事实的验证结论。</p>
+</div>
+{%- endif -%}
+{%- endmacro %}
+
+{# ---------------------------------------------------------------- 任务路径时间线 #}
+
+{% macro task_timeline(steps) -%}
+{%- if not steps -%}
+  <p class="py-4 text-center text-xs text-slate-400">无步骤记录</p>
+{%- else -%}
+<ol class="flex flex-col">
+  {%- for s in steps -%}
+  <li class="relative flex gap-3 pb-4 last:pb-0">
+    {%- if not loop.last -%}
+    <span aria-hidden="true" class="absolute left-[13px] top-9 h-[calc(100%-2.25rem)] w-0.5 rounded {{ 'bg-red-200' if s.status == 'failed' else 'bg-slate-200' }}"></span>
+    {%- endif -%}
+    <span class="relative z-10 mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border font-mono text-xs font-semibold {{ 'border-red-300 bg-red-50 text-red-600' if s.status == 'failed' else 'border-primary-200 bg-primary-50 text-primary-700' }}">{{ s.step }}</span>
+    <div class="min-w-0 flex-1 rounded-md border px-3 py-2 {{ 'border-red-200 bg-red-50/60' if s.status == 'failed' else 'border-slate-200 bg-slate-50/60' }}">
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-sm font-medium text-slate-800">{{ s.action }}</span>
+        {{ status_badge(s.status, 'xs') }}
+        <span class="ml-auto font-mono text-xs text-slate-500">{{ format_sec(s.cost) }}</span>
+      </div>
+      <div class="mt-0.5 font-mono text-xs text-slate-400">{{ format_ts(s.timestamp) }}</div>
+      <button type="button" class="mt-1.5 text-xs font-medium text-primary-600 transition-colors hover:text-primary-700 hover:underline" data-action="toggle-io"
+              data-closed-text="展开查看 input/output ▾" data-open-text="收起 input/output ▴">展开查看 input/output ▾</button>
+      <div class="mt-2 hidden space-y-2">
+        {%- for key in ['input', 'output'] -%}
+        <div>
+          <p class="mb-1 font-mono text-xs font-semibold text-slate-500">{{ key }}</p>
+          {%- if s.get(key) is none -%}
+          <p class="rounded border border-dashed border-slate-300 bg-white px-3 py-2 text-xs text-slate-400">（无数据）</p>
+          {%- else -%}
+          <div class="rounded border border-slate-200 bg-white px-3 py-2">{{ json_node(s.get(key)) }}</div>
+          {%- endif -%}
+        </div>
+        {%- endfor -%}
+      </div>
+    </div>
+  </li>
+  {%- endfor -%}
+</ol>
+{%- endif -%}
+{%- endmacro %}

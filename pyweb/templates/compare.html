@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import card, dimension_badge, status_badge %}
+{% block content %}
+
+{# 双列时间线单元格（视觉与任务路径一致；空占位保持连线连续） #}
+{% macro step_node(step, highlight=None, show_line=True) -%}
+  {%- if not step -%}
+    <div class="relative min-h-12">
+      {%- if show_line %}<span aria-hidden="true" class="absolute left-[13px] top-0 h-full w-0.5 rounded bg-slate-100"></span>{% endif -%}
+    </div>
+  {%- else -%}
+    {%- if highlight == 'removed' %}{% set circle_cls = 'border-red-300 bg-red-50 text-red-500' %}{% set card_cls = 'border-red-200 bg-red-50/60' %}
+    {%- elif highlight == 'added' %}{% set circle_cls = 'border-green-300 bg-green-50 text-green-700' %}{% set card_cls = 'border-green-200 bg-green-50/60' %}
+    {%- elif step.status == 'failed' %}{% set circle_cls = 'border-red-300 bg-red-50 text-red-600' %}{% set card_cls = 'border-slate-200 bg-slate-50/60' %}
+    {%- else %}{% set circle_cls = 'border-primary-200 bg-primary-50 text-primary-700' %}{% set card_cls = 'border-slate-200 bg-slate-50/60' %}{% endif -%}
+    <div class="relative flex gap-3 pb-4">
+      {%- if show_line %}<span aria-hidden="true" class="absolute left-[13px] top-9 h-[calc(100%-2.25rem)] w-0.5 rounded {{ 'bg-red-200' if highlight == 'removed' else ('bg-green-200' if highlight == 'added' else 'bg-slate-200') }}"></span>{% endif -%}
+      <span class="relative z-10 mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border font-mono text-xs font-semibold {{ circle_cls }}">{{ step.step }}</span>
+      <div class="min-w-0 flex-1 self-start rounded-md border px-3 py-2 {{ card_cls }}">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-sm font-medium {{ 'text-red-500 line-through' if highlight == 'removed' else 'text-slate-800' }}">{{ step.action }}</span>
+          {% if not highlight %}{{ status_badge(step.status, 'xs') }}{% endif %}
+          {% if highlight == 'added' %}<span class="rounded border border-green-200 bg-green-100 px-1.5 py-px text-xs font-medium text-green-700">+ 新增</span>{% endif %}
+          {% if highlight == 'removed' %}<span class="rounded border border-red-200 bg-red-100 px-1.5 py-px text-xs font-medium text-red-600">− 已删除</span>{% endif %}
+          <span class="ml-auto font-mono text-xs text-slate-500">{{ format_sec(step.cost) }}</span>
+        </div>
+        <div class="mt-0.5 font-mono text-xs text-slate-400">{{ format_ts(step.timestamp) }}</div>
+      </div>
+    </div>
+  {%- endif -%}
+{%- endmacro %}
+
+<div class="mx-auto w-full max-w-[85rem] pb-6 2xl:max-w-[105rem] 3xl:max-w-[120rem] 4xl:max-w-[140rem]">
+  <!-- 顶部 -->
+  <div class="flex flex-wrap items-center gap-3">
+    <a href="/records/{{ line_no }}" class="inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-xs text-slate-600 transition-colors hover:bg-slate-50">← 返回详情</a>
+    <h1 class="text-lg font-semibold text-slate-800">重跑对比</h1>
+    <span class="rounded border border-slate-200 bg-white px-2 py-0.5 font-mono text-xs text-slate-600">{{ run.run_id }}</span>
+    <span class="min-w-0 max-w-[360px] truncate text-sm text-slate-500" title="{{ record.row_data.query }}">#{{ line_no }} {{ record.row_data.query }}</span>
+    <span class="ml-auto text-xs text-slate-400">
+      图例：<span class="font-medium text-green-600">+ 新增步骤</span> · <span class="font-medium text-red-600">− 已删除步骤</span>
+    </span>
+  </div>
+
+  <!-- 指标对比：五维度 + 最终评测结果 + 耗时 + 步骤数 -->
+  <div class="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4 4xl:grid-cols-8">
+    {% for m in dim_metrics %}
+    <div class="rounded-lg border px-3 py-2.5 shadow-card {{ 'border-primary-200 bg-primary-50/40' if m.strong else 'border-slate-200 bg-white' }}">
+      <p class="text-xs {{ 'font-semibold text-primary-700' if m.strong else 'text-slate-500' }}">{{ m.label }}</p>
+      <div class="mt-1.5 flex flex-wrap items-center gap-2">
+        {{ dimension_badge(m.base, m.invert) }}
+        <span class="text-slate-300">→</span>
+        {{ dimension_badge(m.run, m.invert) }}
+        <span class="ml-auto text-xs font-semibold {{ m.tone }}">{{ m.arrow }} {{ m.text }}</span>
+      </div>
+    </div>
+    {% endfor %}
+    {% for m in num_metrics %}
+    <div class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 shadow-card">
+      <p class="text-xs text-slate-500">{{ m.label }}</p>
+      <div class="mt-1.5 flex items-baseline gap-2 font-mono">
+        <span class="text-sm text-slate-600">{{ m.base_str }}</span>
+        <span class="text-slate-300">→</span>
+        <span class="text-sm font-semibold text-slate-800">{{ m.run_str }}</span>
+        <span class="ml-auto text-xs font-semibold {{ m.tone }}">{{ m.arrow }} {{ m.delta }}</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- 任务路径双列对齐 -->
+  {% call card('任务路径对比', record.steps_traces|length ~ ' 步 → ' ~ run.steps_traces|length ~ ' 步', className='mt-4') %}
+    <div class="mb-3 grid grid-cols-2 gap-x-6 border-b border-slate-100 pb-2 text-xs font-medium text-slate-500 3xl:gap-x-10">
+      <span>原始记录</span>
+      <span>重跑记录</span>
+    </div>
+    <div class="grid grid-cols-2 gap-x-6 3xl:gap-x-10">
+      {% for row in aligned %}
+      {% set is_last = loop.last %}
+      {{ step_node(row.get('left'), 'removed' if (row.get('left') and not row.get('right')) else None, is_last) }}
+      {{ step_node(row.get('right'), 'added' if (row.get('right') and not row.get('left')) else None, is_last) }}
+      {% endfor %}
+    </div>
+  {% endcall %}
+
+  <!-- 重跑配置 -->
+  {% if run.config %}
+  {% call card('重跑配置', className='mt-4') %}
+    <pre class="overflow-x-auto rounded border border-slate-100 bg-slate-50 p-2.5 font-mono text-xs text-slate-600">{{ run.config }}</pre>
+  {% endcall %}
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+# 依赖目录
+node_modules/
+
+# 前端构建产物
+dist/
+
+# Python 虚拟环境
+pyweb/.venv/
+**/__pycache__/
+*.py[cod]
+
+# Python 运行时状态（删除后可从初始数据重新生成，见 pyweb/README.md）
+pyweb/data/state.json
+pyweb/data/reruns_state.json
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log

@@ -1,0 +1,302 @@
+{
+  "1": [
+    {
+      "run_id": "run-a1f3e9",
+      "status": "success",
+      "evaluation": {
+        "relevance": 1,
+        "consistency": 1,
+        "informativeness": 1,
+        "correctness": 1,
+        "icon_issue": 0,
+        "final": 1,
+        "comment": "定义准确，结构清晰"
+      },
+      "duration": 1.45,
+      "created_at": "2026-09-28T14:32:00Z",
+      "config": "{\"model\":\"agent-v2\",\"temperature\":0.3,\"top_k\":5}",
+      "steps_traces": [
+        {
+          "step": 1,
+          "action": "解析问题意图",
+          "status": "success",
+          "cost": 0.14,
+          "timestamp": "2026-09-28T14:32:00Z",
+          "input": {
+            "query": "什么是机器学习？",
+            "lang": "zh",
+            "task_type": "concept_definition"
+          },
+          "output": {
+            "intent": "定义类问题",
+            "topic": "机器学习",
+            "confidence": 0.95
+          }
+        },
+        {
+          "step": 2,
+          "action": "检索知识库",
+          "status": "success",
+          "cost": 0.41,
+          "timestamp": "2026-09-28T14:32:01Z",
+          "input": {
+            "query": "机器学习 定义",
+            "top_k": 5
+          },
+          "output": {
+            "hits": 4,
+            "top_score": 0.9
+          }
+        },
+        {
+          "step": 3,
+          "action": "生成候选答案",
+          "status": "success",
+          "cost": 0.52,
+          "timestamp": "2026-09-28T14:32:02Z",
+          "input": {
+            "prompt": "基于检索结果解释机器学习",
+            "context_docs": 4,
+            "max_tokens": 512
+          },
+          "output": {
+            "draft_tokens": 205,
+            "finish_reason": "stop"
+          }
+        },
+        {
+          "step": 4,
+          "action": "事实一致性校验",
+          "status": "success",
+          "cost": 0.22,
+          "timestamp": "2026-09-28T14:32:03Z",
+          "input": {
+            "claims": 4,
+            "references": 2
+          },
+          "output": {
+            "verified": 4,
+            "contradicted": 0,
+            "score": 1
+          }
+        },
+        {
+          "step": 5,
+          "action": "格式化输出",
+          "status": "success",
+          "cost": 0.16,
+          "timestamp": "2026-09-28T14:32:04Z",
+          "input": {
+            "sections": [
+              "定义"
+            ],
+            "format": "markdown"
+          },
+          "output": {
+            "chars": 341
+          }
+        }
+      ]
+    },
+    {
+      "run_id": "run-b7c2d4",
+      "status": "failed",
+      "evaluation": {
+        "relevance": 1,
+        "consistency": 0,
+        "informativeness": 1,
+        "correctness": 1,
+        "icon_issue": 0,
+        "final": 0,
+        "comment": "跳过事实一致性校验，一致性维度不通过"
+      },
+      "duration": 2.13,
+      "created_at": "2026-09-29T09:18:00Z",
+      "config": "{\"model\":\"agent-v1\",\"temperature\":0.7,\"top_k\":3}",
+      "steps_traces": [
+        {
+          "step": 1,
+          "action": "解析问题意图",
+          "status": "success",
+          "cost": 0.12,
+          "timestamp": "2026-09-29T09:18:00Z",
+          "input": {
+            "query": "什么是机器学习？",
+            "lang": "zh"
+          },
+          "output": {
+            "intent": "定义类问题",
+            "topic": "机器学习",
+            "confidence": 0.96
+          }
+        },
+        {
+          "step": 2,
+          "action": "检索知识库",
+          "status": "success",
+          "cost": 0.46,
+          "timestamp": "2026-09-29T09:18:01Z",
+          "input": {
+            "query": "机器学习",
+            "top_k": 3
+          },
+          "output": {
+            "hits": 3,
+            "top_score": 0.87
+          }
+        },
+        {
+          "step": 3,
+          "action": "生成候选答案",
+          "status": "success",
+          "cost": 0.85,
+          "timestamp": "2026-09-29T09:18:03Z",
+          "input": {
+            "prompt": "解释机器学习",
+            "context_docs": 3,
+            "max_tokens": 256,
+            "temperature": 0.7
+          },
+          "output": {
+            "draft_tokens": 160,
+            "finish_reason": "stop",
+            "creativity_bias": true
+          }
+        },
+        {
+          "step": 4,
+          "action": "格式化输出",
+          "status": "success",
+          "cost": 0.2,
+          "timestamp": "2026-09-29T09:18:04Z",
+          "input": {
+            "format": "plain"
+          },
+          "output": {
+            "chars": 288
+          }
+        }
+      ]
+    },
+    {
+      "run_id": "run-c9e8f1",
+      "status": "success",
+      "evaluation": {
+        "relevance": 1,
+        "consistency": 1,
+        "informativeness": 1,
+        "correctness": 1,
+        "icon_issue": 0,
+        "final": 1,
+        "comment": "新增引用来源核对，各维度均通过"
+      },
+      "duration": 1.05,
+      "created_at": "2026-09-30T16:45:00Z",
+      "config": "{\"model\":\"agent-v2\",\"temperature\":0.2,\"top_k\":8}",
+      "steps_traces": [
+        {
+          "step": 1,
+          "action": "解析问题意图",
+          "status": "success",
+          "cost": 0.1,
+          "timestamp": "2026-09-30T16:45:00Z",
+          "input": {
+            "query": "什么是机器学习？",
+            "lang": "zh",
+            "task_type": "concept_definition"
+          },
+          "output": {
+            "intent": "定义类问题",
+            "topic": "机器学习",
+            "confidence": 0.98
+          }
+        },
+        {
+          "step": 2,
+          "action": "检索知识库",
+          "status": "success",
+          "cost": 0.3,
+          "timestamp": "2026-09-30T16:45:01Z",
+          "input": {
+            "query": "机器学习 定义 概念",
+            "top_k": 8
+          },
+          "output": {
+            "hits": 8,
+            "top_score": 0.95
+          }
+        },
+        {
+          "step": 3,
+          "action": "生成候选答案",
+          "status": "success",
+          "cost": 0.38,
+          "timestamp": "2026-09-30T16:45:02Z",
+          "input": {
+            "prompt": "基于检索结果，解释什么是机器学习并标注引用",
+            "context_docs": 8,
+            "max_tokens": 512
+          },
+          "output": {
+            "draft_tokens": 230,
+            "finish_reason": "stop",
+            "citations": 3
+          }
+        },
+        {
+          "step": 4,
+          "action": "引用来源核对",
+          "status": "success",
+          "cost": 0.15,
+          "timestamp": "2026-09-30T16:45:03Z",
+          "input": {
+            "citations": 3,
+            "sources": [
+              "ml_basics.md",
+              "ai_glossary.md",
+              "ml_survey.pdf"
+            ]
+          },
+          "output": {
+            "matched": 3,
+            "broken": 0
+          }
+        },
+        {
+          "step": 5,
+          "action": "事实一致性校验",
+          "status": "success",
+          "cost": 0.17,
+          "timestamp": "2026-09-30T16:45:03Z",
+          "input": {
+            "claims": 5,
+            "references": 3
+          },
+          "output": {
+            "verified": 5,
+            "contradicted": 0,
+            "score": 1
+          }
+        },
+        {
+          "step": 6,
+          "action": "格式化输出",
+          "status": "success",
+          "cost": 0.12,
+          "timestamp": "2026-09-30T16:45:04Z",
+          "input": {
+            "sections": [
+              "定义",
+              "核心思想",
+              "参考"
+            ],
+            "format": "markdown"
+          },
+          "output": {
+            "chars": 402
+          }
+        }
+      ]
+    }
+  ]
+}
