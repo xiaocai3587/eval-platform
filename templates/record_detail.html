@@ -1,10 +1,10 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 {% from '_macros.html' import card, dimension_badge, status_badge, info_row, long_text, json_node, fact_matrix, task_timeline %}
 {% block content %}
 <div class="mx-auto w-full max-w-[85rem] pb-6 2xl:max-w-[105rem] 3xl:max-w-[120rem] 4xl:max-w-[140rem]">
   <!-- 顶部：返回 + 标题 + process_data 浮窗开关 + 重跑按钮 -->
   <div class="flex shrink-0 flex-wrap items-center gap-3">
-    <a href="/records" class="inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-xs text-slate-600 transition-colors hover:bg-slate-50">← 记录列表</a>
+    <a href="/records?file={{ current_file.id }}" class="inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-xs text-slate-600 transition-colors hover:bg-slate-50">← 记录列表</a>
     <h1 class="text-lg font-semibold text-slate-800">记录 #{{ line_no }}</h1>
     <span class="min-w-0 max-w-[420px] truncate text-sm text-slate-500" title="{{ record.row_data.query }}">{{ record.row_data.query }}</span>
     <span class="ml-auto flex items-center gap-2">
@@ -46,7 +46,7 @@
                 data-reason="{{ (ev.get('dimension_reasons') or {}).get(d.key, '') }}"
                 class="flex items-center gap-1.5 rounded border border-slate-200 bg-slate-50/60 px-2 py-1 transition-colors hover:border-primary-300 hover:bg-primary-50">
           <span class="text-xs text-slate-500">{{ d.label }}</span>
-          {{ dimension_badge(ev.get(d.key), d.invert) }}
+          {{ dimension_badge(ev.get(d.key)) }}
         </button>
         {% endfor %}
       </div>
@@ -108,7 +108,7 @@
       <!-- 来源统计 + 筛选 -->
       <div class="flex flex-wrap items-center gap-1.5">
         {% for f, cnt in [('all', ref_ctx.available|length)] + ref_ctx.from_counts.items()|list %}
-        <a href="/records/{{ line_no }}?ref_from={{ f }}"
+        <a href="/records/{{ line_no }}?ref_from={{ f }}&file={{ current_file.id }}"
            class="rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors {{ 'border-primary-300 bg-primary-50 text-primary-700' if ref_ctx.from == f else 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50' }}">
           {{ '全部' if f == 'all' else f }} {{ cnt }}
         </a>
@@ -188,6 +188,10 @@
   {# ⑥ 历史重跑（置底） #}
   <div class="mt-4">
     {% call card('历史重跑', reruns|length ~ ' 次运行') %}
+      <p class="mb-3 inline-flex items-center gap-1.5 rounded border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700">
+        <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+        模拟数据：重跑结果为本地随机生成，不调用真实评测服务
+      </p>
       {% if not reruns %}
       <p class="py-6 text-center text-xs text-slate-400">暂无重跑记录，点击右上角「重跑此条」发起一次重跑</p>
       {% else %}
@@ -218,7 +222,7 @@
               {% if r.status == 'running' %}
               <span class="text-xs text-slate-300">对比（进行中）</span>
               {% else %}
-              <a href="/records/{{ line_no }}/compare/{{ r.run_id }}" class="text-xs text-primary-600 hover:underline">对比 →</a>
+              <a href="/records/{{ line_no }}/compare/{{ r.run_id }}?file={{ current_file.id }}" class="text-xs text-primary-600 hover:underline">对比 →</a>
               {% endif %}
             </td>
           </tr>
@@ -288,6 +292,10 @@
       </button>
     </header>
     <div class="flex-1 overflow-y-auto px-4 py-3">
+      <p class="mb-2 inline-flex items-center gap-1.5 rounded border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700">
+        <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+        当前为重跑模拟：结果由本地随机生成（步骤耗时扰动 + 维度随机翻转），不会调用真实评测服务
+      </p>
       <p class="text-xs text-slate-500">可选：填写本次重跑的配置（JSON 格式），留空则使用默认配置。</p>
       <textarea id="rerun-config" rows="8" spellcheck="false" placeholder='{"model":"agent-v2","temperature":0.3}'
                 class="mt-2 w-full resize-y rounded border border-slate-200 bg-slate-50 p-2.5 font-mono text-xs text-slate-700 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100">{{ default_rerun_config }}</textarea>
@@ -295,7 +303,7 @@
     <footer class="shrink-0 border-t border-slate-200 px-4 py-3">
       <div class="flex justify-end gap-2">
         <button type="button" data-modal-close class="h-8 rounded border border-slate-200 px-3 text-xs text-slate-600 transition-colors hover:bg-slate-50">取消</button>
-        <button type="button" data-action="start-rerun" data-line-no="{{ line_no }}"
+        <button type="button" data-action="start-rerun" data-line-no="{{ line_no }}" data-file-id="{{ current_file.id }}"
                 class="h-8 rounded bg-primary-600 px-3 text-xs font-medium text-white transition-colors hover:bg-primary-700">↻ 开始重跑</button>
       </div>
     </footer>

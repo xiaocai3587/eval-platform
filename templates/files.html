@@ -5,20 +5,30 @@
   <div class="flex shrink-0 items-end justify-between">
     <div>
       <h1 class="text-lg font-semibold text-slate-800">评测文件</h1>
-      <p class="mt-0.5 text-xs text-slate-500">上传 .jsonl 评测结果文件，解析后查看记录明细</p>
+      <p class="mt-0.5 text-xs text-slate-500">上传 .jsonl / .json 评测结果文件，解析后查看记录明细</p>
     </div>
     <span class="text-xs text-slate-400">共 {{ files|length }} 个文件</span>
   </div>
 
-  <!-- 拖拽上传区（仅 UI：点击 / 拖入均模拟选中一个文件） -->
-  <form id="upload-zone" method="post" action="/upload"
-        class="flex shrink-0 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed border-slate-300 bg-white py-7 transition-colors hover:border-primary-300 hover:bg-primary-50/30">
-    <svg viewBox="0 0 24 24" class="h-6 w-6 text-primary-500" fill="none" aria-hidden="true">
-      <path d="M12 16V5m0 0-4 4m4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-    </svg>
-    <button type="submit" data-upload-text class="text-sm font-medium text-slate-600">拖拽 .jsonl 文件到此处，或点击模拟选中文件</button>
-    <p class="text-xs text-slate-400">支持 .jsonl 格式 · 单文件 ≤ 50MB（演示环境为模拟上传）</p>
+  <!-- 上传失败提示 -->
+  {% if error %}
+  <div class="flex shrink-0 items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
+    <span class="font-medium">上传失败：</span><span>{{ error }}</span>
+  </div>
+  {% endif %}
+
+  <!-- 上传区：点击选择或拖拽 .jsonl / .json 文件，提交后由后端逐行真实解析 -->
+  <form id="upload-zone" method="post" action="/upload" enctype="multipart/form-data"
+        class="flex shrink-0 flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed border-slate-300 bg-white py-7 transition-colors hover:border-primary-300 hover:bg-primary-50/30">
+    <input id="upload-input" type="file" name="file" accept=".jsonl,.json" class="sr-only" />
+    <label for="upload-input" class="flex cursor-pointer flex-col items-center gap-1.5">
+      <svg viewBox="0 0 24 24" class="h-6 w-6 text-primary-500" fill="none" aria-hidden="true">
+        <path d="M12 16V5m0 0-4 4m4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <span data-upload-text class="text-sm font-medium text-slate-600">拖拽 .jsonl / .json 文件到此处，或点击选择文件</span>
+    </label>
+    <p class="text-xs text-slate-400">支持 .jsonl（及内容为 jsonl 的 .json）· 单文件 ≤ 50MB · 每行一个评测记录</p>
   </form>
 
   <!-- 文件列表 -->

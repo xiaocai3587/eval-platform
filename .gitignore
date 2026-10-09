@@ -13,6 +13,9 @@ dist/
 data/state.json
 data/reruns_state.json
 
+# 用户上传的文件记录（按文件独立存放）
+data/uploads/
+
 # 编辑器 / 系统
 .vscode/
 .idea/

@@ -1,6 +1,6 @@
 /* 评测结果查看器 · Python 版前端交互（原生 JS，无框架）
    覆盖：通用 Modal / 长文本展开 / input-output 折叠 / process_data 抽屉 /
-        维度原因弹窗 / 重跑 / 文件页拖拽上传（模拟） */
+        维度原因弹窗 / 重跑 / 文件页真实上传（选择或拖拽 .jsonl） */
 (function () {
   'use strict';
 
@@ -112,13 +112,14 @@
   if (rerunBtn) {
     rerunBtn.addEventListener('click', function () {
       var lineNo = rerunBtn.getAttribute('data-line-no');
+      var fileId = rerunBtn.getAttribute('data-file-id') || '';
       var config = (qs('#rerun-config') || {}).value || '';
       rerunBtn.disabled = true;
       rerunBtn.textContent = '重跑中…';
       fetch('/api/rerun/' + lineNo, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ config: config }).toString(),
+        body: new URLSearchParams({ config: config, file: fileId }).toString(),
       })
         .then(function (r) { return r.json(); })
         .then(function () {
@@ -133,9 +134,22 @@
     });
   }
 
-  /* ---------- 文件页：拖拽上传（模拟）+ 提交时显示解析中 ---------- */
+  /* ---------- 文件页：真实上传（点击选择 / 拖拽），提交时显示解析中 ---------- */
   var zone = qs('#upload-zone');
   if (zone) {
+    var input = qs('#upload-input', zone);
+    function startUpload() {
+      var text = zone.querySelector('[data-upload-text]');
+      if (text) text.textContent = '正在解析文件…';
+      zone.classList.add('pointer-events-none', 'opacity-60');
+    }
+    if (input) {
+      input.addEventListener('change', function () {
+        if (!input.files || !input.files.length) return;
+        startUpload();
+        zone.submit();
+      });
+    }
     ['dragover', 'dragenter'].forEach(function (ev) {
       zone.addEventListener(ev, function (e) {
         e.preventDefault();
@@ -148,14 +162,11 @@
     zone.addEventListener('drop', function (e) {
       e.preventDefault();
       zone.classList.remove('border-primary-400', 'bg-primary-50/50');
+      var files = e.dataTransfer && e.dataTransfer.files;
+      if (!files || !files.length || !input) return;
+      input.files = files;
+      startUpload();
       zone.submit();
-    });
-    zone.addEventListener('submit', function () {
-      var text = zone.querySelector('[data-upload-text]');
-      if (text) text.textContent = '正在解析文件…';
-      var btn = zone.querySelector('button[type="submit"]');
-      if (btn) btn.disabled = true;
-      zone.classList.add('cursor-wait');
     });
   }
 })();

@@ -1,16 +1,13 @@
 {# ---------------------------------------------------------------- 徽章类 #}
 
-{# 维度值徽章：1 绿 ✓ / 0 红 ✕ / 文字状态蓝；invert = 反向维度（icon_issue：1=有问题红✕，0=无问题绿✓） #}
-{% macro dimension_badge(value, invert=False) -%}
-  {%- if value is number and value is not boolean -%}
-    {%- set ok = (value == 0) if invert else (value == 1) -%}
-    {%- if ok -%}
-      <span class="inline-flex items-center gap-1 whitespace-nowrap rounded border border-green-200 bg-green-50 px-2 py-0.5 font-mono text-xs font-semibold text-green-700">✓ {{ value }}</span>
-    {%- else -%}
-      <span class="inline-flex items-center gap-1 whitespace-nowrap rounded border border-red-200 bg-red-50 px-2 py-0.5 font-mono text-xs font-semibold text-red-700">✕ {{ value }}</span>
-    {%- endif -%}
+{# 评测结果徽章：1 红 ✕ / 0 绿 ✓ / 其他（文字或非 0-1）琥珀 #}
+{% macro dimension_badge(value) -%}
+  {%- if value is number and value is not boolean and value == 1 -%}
+    <span class="inline-flex items-center gap-1 whitespace-nowrap rounded border border-red-200 bg-red-50 px-2 py-0.5 font-mono text-xs font-semibold text-red-700">✕ {{ value }}</span>
+  {%- elif value is number and value is not boolean and value == 0 -%}
+    <span class="inline-flex items-center gap-1 whitespace-nowrap rounded border border-green-200 bg-green-50 px-2 py-0.5 font-mono text-xs font-semibold text-green-700">✓ {{ value }}</span>
   {%- else -%}
-    <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded border border-sky-200 bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-700"><span class="h-1.5 w-1.5 rounded-full bg-sky-500"></span>{{ value }}</span>
+    <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700"><span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>{{ value }}</span>
   {%- endif -%}
 {%- endmacro %}
 
@@ -22,16 +19,6 @@
     <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded border border-green-200 bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700"><span class="h-1.5 w-1.5 rounded-full bg-green-500"></span>通过</span>
   {%- else -%}
     <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded border border-red-200 bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700"><span class="h-1.5 w-1.5 rounded-full bg-red-500"></span>不通过</span>
-  {%- endif -%}
-{%- endmacro %}
-
-{# 综合分徽章：None = 人工参与（蓝）· >=0.8 绿 · >=0.6 琥珀 · <0.6 红 #}
-{% macro score_badge(score) -%}
-  {%- if score is none -%}
-    <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded border border-sky-200 bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-700"><span class="h-1.5 w-1.5 rounded-full bg-sky-500"></span>人工参与</span>
-  {%- else -%}
-    {%- set tone = 'border-green-200 bg-green-50 text-green-700' if score >= 0.8 else ('border-amber-200 bg-amber-50 text-amber-700' if score >= 0.6 else 'border-red-200 bg-red-50 text-red-700') -%}
-    <span class="inline-flex items-center rounded border px-2 py-0.5 font-mono text-xs font-semibold {{ tone }}">{{ format_score(score) }}</span>
   {%- endif -%}
 {%- endmacro %}
 
